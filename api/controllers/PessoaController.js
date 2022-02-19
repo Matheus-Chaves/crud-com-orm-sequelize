@@ -1,5 +1,5 @@
 const database = require("../models"); //controlador precisa se conectar com o modelo
-
+const Sequelize = require("sequelize");
 class PessoaController {
   static async pegaPessoasAtivas(req, res) {
     try {
@@ -151,6 +151,53 @@ class PessoaController {
       return res
         .status(200)
         .json({ mensagem: `id ${matriculaId} restaurado.` });
+    } catch (error) {
+      return res.status(500).json(error.message);
+    }
+  }
+
+  static async pegaMatriculas(req, res) {
+    const { estudanteId } = req.params;
+    try {
+      const pessoa = await database.Pessoas.findOne({
+        where: { id: Number(estudanteId) },
+      });
+      const matriculas = await pessoa.getAulasMatriculadas();
+      return res.status(200).json(matriculas);
+    } catch (error) {
+      return res.status(500).json(error.message);
+    }
+  }
+
+  static async pegaMatriculasPorTurma(req, res) {
+    const { turmaId } = req.params;
+    try {
+      const todasAsMatriculas = await database.Matriculas.findAndCountAll({
+        where: {
+          turma_id: Number(turmaId),
+          status: "confirmado",
+        },
+        limit: 3, //ainda mostra a contagem TOTAL de resultados, mas retorna apenas 3 dado (linha) da tabela
+        order: [["estudante_id", "DESC"]], //ordena pela coluna X, de forma ASCendente ou DESCendente
+      });
+      return res.status(200).json(todasAsMatriculas);
+    } catch (error) {
+      return res.status(500).json(error.message);
+    }
+  }
+
+  static async pegaTurmasLotadas(req, res) {
+    const lotacaoTurma = 2;
+    try {
+      const turmasLotadas = await database.Matriculas.findAndCountAll({
+        where: {
+          status: "confirmado",
+        },
+        attributes: ["turma_id"], //atributo(s) que serão retornados nos dados
+        group: ["turma_id"], //atributo qual iremos agrupar os resultados
+        having: Sequelize.literal(`COUNT(turma_id) >= ${lotacaoTurma}`),
+      });
+      return res.status(200).json(turmasLotadas.count);
     } catch (error) {
       return res.status(500).json(error.message);
     }

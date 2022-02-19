@@ -2,17 +2,14 @@
 const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class Pessoas extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
     static associate(models) {
       Pessoas.hasMany(models.Turmas, {
         foreignKey: "docente_id",
       });
       Pessoas.hasMany(models.Matriculas, {
         foreignKey: "estudante_id",
+        scope: { status: "confirmado" }, //é possível criar SEM o escopo, porém aqui ele serve para filtrar o resultado (como um 'where')
+        as: "aulasMatriculadas", //função a ser chamada
       });
     }
   }
