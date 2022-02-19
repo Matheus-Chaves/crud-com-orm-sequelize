@@ -49,13 +49,22 @@ class PessoaController {
   static async apagaPessoa(req, res) {
     const { id } = req.params;
     try {
-      await database.Pessoas.destroy({ where: { id: id } });
+      await database.Pessoas.destroy({ where: { id: Number(id) } });
       return res.status(200).json({ mensagem: `id ${id} deletado.` });
     } catch (error) {
       return res.status(500).json(error.message);
     }
   }
 
+  static async restauraPessoa(req, res) {
+    const { id } = req.params;
+    try {
+      await database.Pessoas.restore({ where: { id: Number(id) } });
+      return res.status(200).json({ mensagem: `id ${id} restaurado.` });
+    } catch (error) {
+      return res.status(500).json(error.message);
+    }
+  }
   //A tabela de matrículas se relaciona com a de pessoas.
   //Toda rota de matrículas está vinculada à de pessoas.
   //Logo, os métodos do controller das matrículas ficarão aqui!
@@ -116,6 +125,23 @@ class PessoaController {
         where: { id: Number(matriculaId) },
       });
       return res.status(200).json({ mensagem: `id ${matriculaId} deletado.` });
+    } catch (error) {
+      return res.status(500).json(error.message);
+    }
+  }
+
+  static async restauraMatricula(req, res) {
+    const { estudanteId, matriculaId } = req.params;
+    try {
+      await database.Matriculas.restore({
+        where: {
+          id: Number(matriculaId),
+          estudante_id: estudanteId,
+        },
+      });
+      return res
+        .status(200)
+        .json({ mensagem: `id ${matriculaId} restaurado.` });
     } catch (error) {
       return res.status(500).json(error.message);
     }
