@@ -206,17 +206,21 @@ class PessoaController {
   static async cancelaPessoa(req, res) {
     const { estudanteId } = req.params;
     try {
-      await database.Pessoas.update(
-        { ativo: false },
-        { where: { id: Number(estudanteId) } }
-      );
-      await database.Matriculas.update(
-        { status: "cancelado" },
-        { where: { estudante_id: Number(estudanteId) } }
-      );
+      database.sequelize.transaction(async (transacao) => {
+        await database.Pessoas.update(
+          { ativo: false },
+          { where: { id: Number(estudanteId) } },
+          { transaction: transacao }
+        );
+        await database.Matriculas.update(
+          { status: "cancelado" },
+          { where: { estudante_id: Number(estudanteId) } },
+          { transaction: transacao }
+        );
 
-      return res.status(200).json({
-        message: `Matriculas referentes ao estudante ${estudanteId} foram canceladas.`,
+        return res.status(200).json({
+          message: `Matriculas referentes ao estudante ${estudanteId} foram canceladas.`,
+        });
       });
     } catch (error) {
       return res.status(500).json(error.message);
